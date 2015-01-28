@@ -3,3 +3,10 @@ packer_cache/
 
 # For built boxes
 *.box
+
+# emacs
+\#*\#
+*~
+
+.gitignore
+.gitattributes
