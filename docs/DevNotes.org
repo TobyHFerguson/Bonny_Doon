@@ -1,0 +1,68 @@
+#+TITLE: Developer Notes
+* System
+These Vagrant images (OVM/OVS) are expected to be packaged together, and communicate over a private network (=intnet=). Furthermore the OVS servers expose multiple private networks. The list of devices networks and servers is given in the the table below:
+| Server | Device | VirtualBox Adapter | Network    |
+|--------+--------+--------------------+------------|
+| OVM    | eth0   |                  1 | NAT        |
+|        | eth1   |                  2 | INTNET     |
+| OVS    | eth0   |                  1 | NAT        |
+|        | eth1   |                  2 | INTNET     |
+|        | ethN   |                N+1 | INTNET_N+1 |
+
+Vagrant will modify the =ifcfg-ethN= files to a static address; Server rediscovery will (hopefully!) reset this networking back to whatever is configured for a specific set of machines.
+* OVM
+OVM is an application installed on top of Oracle Linux. Thus this isn't really part of a Packer build. I need to define a Vagrantfile to build this!
+
+However OVM can be built silently using a response file.
+
+For OVM 3.3 the response file format is online:   and here:
+#+BEGIN_SRC yaml
+db:
+	port : 49500         Sets the TCP port that MySQL uses
+	user : ovs           Sets the username for the Oracle VM Manager database in MySQL
+	password : p4ssword  Sets the password for the Oracle VM Manager database in MySQL
+
+webLogic:
+	user : weblogic      Sets the username for the Oracle WebLogic Server administrative user
+	password : p4ssword  Sets the password for the Oracle WebLogic Server administrative user
+
+OVMCore:
+	user : admin         Sets the username for the Oracle VM Manager application
+	password : p4ssword  Sets the password for the Oracle VM Manager application
+
+Certificate:
+       FQN : fully.qualified.domain.name  
+                      Sets the value for the hostname applied to the
+                      automatically generated self-signed SSL certificate that
+                      Oracle VM Manager uses for HTTPS communications. It should
+                      either match a valid IP address, or should contain the hostname
+                      returned by the hostname -f command.             
+#+END_SRC
+My response file will be:
+#+BEGIN_SRC yaml
+db:
+	port : 49500         Sets the TCP port that MySQL uses
+	user : ovs           Sets the username for the Oracle VM Manager database in MySQL
+	password : Welcome1  Sets the password for the Oracle VM Manager database in MySQL
+
+webLogic:
+	user : weblogic      Sets the username for the Oracle WebLogic Server administrative user
+	password : Welcome1  Sets the password for the Oracle WebLogic Server administrative user
+
+OVMCore:
+	user : admin         Sets the username for the Oracle VM Manager application
+	password : Welcome1  Sets the password for the Oracle VM Manager application
+
+Certificate:
+       FQN : ovmm.lab.net
+                      Sets the value for the hostname applied to the
+                      automatically generated self-signed SSL certificate that
+                      Oracle VM Manager uses for HTTPS communications. It should
+                      either match a valid IP address, or should contain the hostname
+                      returned by the hostname -f command.             
+
+#+END_SRC
+* OVS
+OVS is a bare metal install using the Anaconda installer. Packer can handle this.
+
+Unfortunately Packer installs the server successfully but after the server has rebooted Packer never completes the ssh connection (despite it being possible - I've done it in another terminal), and after the timeout Packer kills the build. I've filed this as an issue with Packer.

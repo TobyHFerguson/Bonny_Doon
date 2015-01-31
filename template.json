@@ -1,0 +1,63 @@
+{
+    "variables": {
+	"iso_url": null
+	, "iso_checksum": null
+	, "iso_checksum_type": null
+	, "minor_version": null
+	, "headless": "false"
+    },
+    "provisioners": [
+	{
+	    "type": "shell",
+	    "execute_command": "echo 'vagrant'|{{ .Vars }} sudo -E -S bash '{{.Path}}'",
+	    "override": {
+		"virtualbox-iso": {
+		    "scripts": [
+			"scripts/networks.sh"
+			, "scripts/sudo.sh"
+			, "scripts/vagrant.sh"
+			, "scripts/cleanup.sh"
+		    ]
+		}
+	    }
+	}
+    ],
+    "post-processors": [
+	{
+	    "type": "vagrant",
+	    "override": {
+		"virtualbox": {
+		    "output": "ovs-{{ user `minor_version` }}.box"
+		}
+	    }
+	}
+    ],
+    "builders": [
+	{
+	    "type": "virtualbox-iso",
+	    "boot_command": [
+		"mboot.c32 xen.gz --- vmlinuz ksdevice=eth0 ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg  --- initrd.img <enter><wait>"
+	    ],
+	    "boot_wait": "10s",
+	    "disk_size": 12228,
+	    "guest_os_type": "Oracle_64",
+	    "headless": "{{ user `headless` }}",
+	    "http_directory": "http",
+            "iso_checksum": "{{user `iso_checksum`}}",
+	    "iso_checksum_type": "{{user `iso_checksum_type`}}",
+	    "iso_url": "{{user `iso_url`}}",
+	    "ssh_username": "root",
+	    "ssh_port": 22,
+	    "ssh_wait_timeout": "20m",
+	    "shutdown_command": "echo '/sbin/halt -h -p' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
+	    "guest_additions_mode" : "disable",
+	    "virtualbox_version_file": ".vbox_version",
+	    "vboxmanage": [
+		[ "modifyvm", "{{.Name}}", "--memory", "2048", "--vram", "10" ]
+		, [ "modifyvm", "{{.Name}}", "--cpus", "2" ]
+		, [ "modifyvm", "{{.Name}}", "--nic2", "intnet", "--intnet2", "intnet_2"]
+	    ] 
+	    , "vm_name": "ovs-{{ user `minor_version` }}"
+	}
+    ]
+}

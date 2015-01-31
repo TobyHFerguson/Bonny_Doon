@@ -1,0 +1,5 @@
+#+TITLE: Bonny Doon - create OVM/OVS Vagrant boxes using Packer
+* Overview
+This repo contains Packer templates and artefacts for building OVM and OVS Vagrant boxes, using a VirtualBox provider.
+
+It is assumed that you have access to the OVM and OVS ISOs (available for free with a free account at http://edelivery.oracle.com)
