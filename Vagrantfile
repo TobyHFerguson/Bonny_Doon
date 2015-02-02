@@ -8,10 +8,7 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ol6u6-minimal-btrfs-uek"
   config.vm.hostname = "ovm.lab.net"
-  config.vm.provision "packages", type: "shell", path: ".ovm/packages.sh"
-  config.vm.provision "createOracle", type: "shell", path: ".ovm/createOracle.sh"
-  config.vm.provision "installOVM", type: "shell", path: ".ovm/installOVM.sh"
-  config.vm.provision "installConsole" type: "shell", path: ".ovm/installConsole.sh"
+  config.vm.provision "shell", path: ".ovm/provision.sh"
   config.vm.provider "virtualbox" do |v|
     # Recommended memory:
     # v.memory = 7680

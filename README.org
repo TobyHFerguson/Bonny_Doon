@@ -1,0 +1,107 @@
+#+TITLE: Bonny Doon - create OVM/OVS Vagrant boxes using Packer
+* Overview
+This repo contains Packer templates and artefacts for building OVM and OVS Vagrant boxes, using a VirtualBox provider.
+
+It is assumed that you have access to the OVM and OVS ISOs (available for free with a free account at http://edelivery.oracle.com)
+
+This system has been tested with OVM 3.2.1 and OVM 3.3.1.
+
+This system is for creating new boxes, not for upgrades from one version of OVM to another.
+* Preparation
+Two ISOs need to be available. The OVM install ISO needs to be available on the local file system (including NFS), but the OVS install ISO can be either local or available via ftp or http
+
+The OVM install iso must be available as =./ovm.iso=
+* Oracle VM Manager
+The Oracle VM Manager will be installed on an Oracle Linux 6 minimal image.
+
+The installation discovers the OVM version and calls the appropriate scripts.
+
+An Oracle VM Manager box is created using the script '=createOVM.sh=' (as root), with the single argument being the location of the OVM ISO.
+
+This script creates a =Vagrantfile= and thus a vm, then repackages the vm into a new Vagrant box, =ovm-X.X.X-virtualbox.box=, where =X.X.X= is the OVM versionid.
+* Oracle VM Server
+Oracle VM Server must be created by hand at this time. There's an issue whereby =Packer= fails to detect the end of the OS install. Once this is fixed then the OVM Server box will be created automatically.
+
+Meantime, the steps required to create an Oracle VM Server box are recorded below:
+** VirtualBox
+Create a VM with the following parameters:
++ Name: BD_OVS
++ Type: Linux
++ Version: Oracle (64 bit) 
++ RAM: 2048G
++ Disk: 12G
++ Adapter 1: NAT
++ Adapter 2: Internal Network, intnet
++ No Audio
++ No USB
+** OVS Installation
+Install OVS using the OVS bootable ISO, with the following settings:
+| Option               | Setting                   |
+|----------------------+---------------------------|
+| Management interface | =eth1=                    |
+| IP Address           | static, =192.168.5.10/24= |
+| Gateway              | leave blank               |
+| Primary DNS          | leave blank               |
+| Secondary DNS        | leave blank               |
+| Hostname             | =ovs.lab.net=             |
+| Root password        | =vagrant=                 |
+** Post install configuration
+*** Networking
+**** eth0
+Ensure =/etc/sysconfig/network-scripts/ifcfg-eth0= contains:
+#+BEGIN_EXAMPLE
+DEVICE="eth0"
+BOOTPROTO="dhcp"
+IPV6INIT="no"
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+TYPE="Ethernet"
+#+END_EXAMPLE
+**** eth1
+Delete the hardware address from =/etc/sysconfig/network-scripts/ifcfg-eth1=
+#+BEGIN_SRC sh
+sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-eth1
+#+END_SRC
+*** Additional Packages
+Install sudo - this will require a temporary change to network route:
+#+BEGIN_SRC sh
+ip route replace default dev eth0
+
+cat >/etc/yum.repos.d/public-yum-ovs.repo <<EOF
+[public_ovm3_latest]
+name=Oracle VM Server 3 Latest
+baseurl=http://public-yum.oracle.com/repo/OracleVM/OVM3/latest/x86_64/
+gpgkey=http://public-yum.oracle.com/RPM-GPG-KEY-oracle-el5
+gpgcheck=1
+enabled=1
+EOF
+
+yum -y install sudo
+
+rm /etc/yum.repos.d/public-yum-ovs.repo
+#+END_SRC
+*** Additional users
+Add =vagrant= as a user:
+#+BEGIN_SRC sh
+useradd vagrant
+echo 'vagrant' | passwd --stdin vagrant
+echo "vagrant ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+#+END_SRC
+*** Minimal Size
+To ensure that the box is as small as it can be execute the following:
+#+BEGIN_SRC sh
+dd if=/dev/zero of=/EMPTY bs=1M
+sync
+sync
+sync
+rm /EMPTY
+shutdown -h now
+#+END_SRC
+** Packaging
+Package the VM to create the =ovs-X.X.X-virtualbox.box= file thus (where =X.X.X= is the OVS versionid, which you need to provide), ensuring that the box file has been deleted first:
+#+BEGIN_SRC sh
+rm -f ovs-X.X.X-virtualbox.box
+vagrant package --base BD_OVS --output ovs-X.X.X-virtualbox.box
+#+END_SRC
+** Finish up
+Once you've tested the box you've created you should delete the original =BD_OVS= VirtualBox VM
