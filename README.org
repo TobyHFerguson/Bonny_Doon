@@ -15,11 +15,15 @@ The OVM install iso must be available as =./ovm.iso=
 The Oracle VM Manager will be installed on an Oracle Linux 6 minimal image.
 
 The installation discovers the OVM version and calls the appropriate scripts.
-
-An Oracle VM Manager box is created using the script '=createOVM.sh=' (as root), with the single argument being the location of the OVM ISO.
-
-This script creates a =Vagrantfile= and thus a vm, then repackages the vm into a new Vagrant box, =ovm-X.X.X-virtualbox.box=, where =X.X.X= is the OVM versionid.
-* Oracle VM Server
+** Install the manager
+Simply execute =vagrant up= and the system will create a VM and install OVM manager on it, using the =ovm.iso= provided.
+** Create the box
+Create a Vagrant box =ovm-X.X.X-virtualbox.box thus (you need to ensure the file isn't already present, and to substitute appropriate values for =X.X.X=):
+#+BEGIN_EXAMPLE
+rm -f ovm-X.X.X-virtualbox.box
+vagrant package --output ovm-X.X.X-virtualbox.box
+#+END_EXAMPLE
+* Oracle VM Server 3.3.1
 Oracle VM Server must be created by hand at this time. There's an issue whereby =Packer= fails to detect the end of the OS install. Once this is fixed then the OVM Server box will be created automatically.
 
 Meantime, the steps required to create an Oracle VM Server box are recorded below:
@@ -48,7 +52,7 @@ Install OVS using the OVS bootable ISO, with the following settings:
 ** Post install configuration
 *** Networking
 **** eth0
-Ensure =/etc/sysconfig/network-scripts/ifcfg-eth0= contains:
+Ensure =/etc/sysconfig/network-scripts/ifcfg-eth0= only contains:
 #+BEGIN_EXAMPLE
 DEVICE="eth0"
 BOOTPROTO="dhcp"
@@ -57,36 +61,35 @@ NM_CONTROLLED="yes"
 ONBOOT="yes"
 TYPE="Ethernet"
 #+END_EXAMPLE
+IN particular, no =HWADDR= nor =UUID= settings should be present.
 **** eth1
-Delete the hardware address from =/etc/sysconfig/network-scripts/ifcfg-eth1=
+Delete the hardware address from =/etc/sysconfig/network-scripts/ifcfg-eth1= since this address will change when the box gets used.
 #+BEGIN_SRC sh
 sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-eth1
 #+END_SRC
-*** Additional Packages
-Install sudo - this will require a temporary change to network route:
-#+BEGIN_SRC sh
-ip route replace default dev eth0
-
-cat >/etc/yum.repos.d/public-yum-ovs.repo <<EOF
-[public_ovm3_latest]
-name=Oracle VM Server 3 Latest
-baseurl=http://public-yum.oracle.com/repo/OracleVM/OVM3/latest/x86_64/
-gpgkey=http://public-yum.oracle.com/RPM-GPG-KEY-oracle-el5
-gpgcheck=1
-enabled=1
-EOF
-
-yum -y install sudo
-
-rm /etc/yum.repos.d/public-yum-ovs.repo
-#+END_SRC
+**** Remove =udev= rules
+To prevent =udev= from being a problem remove the rules:
+#+BEGIN_EXAMPLE
+rm -f /etc/udev/rules.d/70-persistent-net.rules
+mkdir /etc/udev/rules.d/70-persistent-net.rules
+rm -rf /dev/.udev/
+rm -f /lib/udev/rules.d/75-persistent-net-generator.rules
+#+END_EXAMPLE
 *** Additional users
-Add =vagrant= as a user:
+Add =vagrant= as a user with password =vagrant= and =sudo= rights:
 #+BEGIN_SRC sh
 useradd vagrant
 echo 'vagrant' | passwd --stdin vagrant
 echo "vagrant ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 #+END_SRC
+Ensure the vagrant user can ssh in using the public key:
+#+BEGIN_EXAMPLE
+mkdir -pm 700 /home/vagrant/.ssh
+curl -L https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub -o /home/vagrant/.ssh/authorized_keys
+chmod 0600 /home/vagrant/.ssh/authorized_keys
+chown -R vagrant:vagrant /home/vagrant/.ssh
+#+END_EXAMPLE
 *** Minimal Size
 To ensure that the box is as small as it can be execute the following:
 #+BEGIN_SRC sh
@@ -94,7 +97,7 @@ dd if=/dev/zero of=/EMPTY bs=1M
 sync
 sync
 sync
-rm /EMPTY
+rm -f /EMPTY
 shutdown -h now
 #+END_SRC
 ** Packaging
