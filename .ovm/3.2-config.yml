@@ -1,0 +1,38 @@
+db:
+      install       : Yes
+      host          : localhost
+      sys_Welcome1  : Welcome1
+      port          : 49500
+      sid           : ovs 
+      mgmt_port     : 8080
+      user          : ovs
+      Welcome1      : Welcome1
+ 
+webLogic:
+      install       : Yes
+      user          : weblogic
+      Welcome1      : Welcome1
+ 
+java:
+      install       : Yes
+ 
+ADF:
+      install       : Yes
+ 
+OVMCore:
+      install        : Yes
+      user           : admin
+      Welcome1       : Welcome1
+ 
+OVMConsole:
+      install       : Yes
+ 
+OVMShell:
+      install       : Yes
+ 
+onFailure:
+      cleanup       : No 
+
+OVMUpgrade:
+      install       : Yes
+

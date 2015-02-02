@@ -1,0 +1,15 @@
+db:
+        port : 49500 
+        user : ovs 
+        password : Welcome1
+
+webLogic:
+        user : weblogic
+        password : Welcome1
+
+OVMCore:
+        user : admin
+        password : Welcome1
+
+Certificate:
+       FQN : ovm.lab.net
