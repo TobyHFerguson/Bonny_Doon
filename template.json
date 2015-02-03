@@ -13,10 +13,10 @@
 	    "override": {
 		"virtualbox-iso": {
 		    "scripts": [
-			"scripts/networks.sh"
-			, "scripts/sudo.sh"
-			, "scripts/vagrant.sh"
-			, "scripts/cleanup.sh"
+			".ovs/scripts/networks.sh"
+			, "./ovs/sudo.sh"
+			, "./ovs/vagrant.sh"
+			, "./ovs/cleanup.sh"
 		    ]
 		}
 	    }
