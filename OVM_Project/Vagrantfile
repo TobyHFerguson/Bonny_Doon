@@ -1,0 +1,69 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  ### Shared or common configuration items
+  config.vm.box = "ovs-3.3.1"
+  config.vm.box_url = "file:///shared/Vagrant/Bonny_Doon/ovs-3.3.1-virtualbox.box"
+
+  # We don't use guest additions in the ovm servers
+  config.vbguest.auto_update = false
+  # No guest additions => no shared folders
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.hostmanager.enabled = true
+  config.hostmanager.include_offline = true
+
+  ### OVM Manager ###
+  config.vm.define "ovm1" do |ovm|
+    ovm.vm.box = "ovm-3.3.1"
+    ovm.vm.box_url = "file:///shared/Vagrant/Bonny_Doon/ovm-3.3.1-virtualbox.box"
+    # ovm.vm.box_url = "file:///net/qnap1/Public/VagrantBoxes/ovmm_3.2.1.box"
+    ovm.vm.hostname = "ovm.lab.net"
+    ovm.vbguest.auto_update = true
+    ovm.vm.synced_folder ".", "/vagrant", disabled: false
+    # setup eth1 (NOT eth0) as the management network running on "intnet"
+    ovm.vm.network "private_network", ip: "192.168.60.4",
+                   virtualbox__intnet: true
+    ovm.vm.network "forwarded_port", guest: 7002, host: 17002, auto_correct: true
+  end
+
+
+  ### OVM Server 1 ###
+  config.vm.define "ovs1" do |ovs|
+    ovs.vm.hostname = "ovs1.lab.net"
+    # setup eth1 (NOT eth0) as the management network running on "intnet"
+    ovs.vm.network "private_network", ip: "192.168.60.7",
+                   virtualbox__intnet: true
+    ovs.vm.provision "ovs_networking", type: "shell", path: "scripts/ovs.sh", run: "always"
+
+    # setup eth2 for any other purpose 
+    ovs.vm.network "private_network", ip: "192.168.70.100",
+                   virtualbox__intnet: "private_interface"
+
+    # Setup iscsi initator name - only needed on initial creation
+    ovs.vm.provision "isci", type: "shell", path: "scripts/iscsi-iname.sh"
+  end
+
+  ### OVM Server 2 ###
+  config.vm.define "ovs2" do |ovs|
+    ovs.vm.hostname = "ovs2.lab.net"
+
+    # setup eth1 (NOT eth0) as the management network running on "intnet"
+    ovs.vm.network "private_network", ip: "192.168.60.5",
+                   virtualbox__intnet: true
+    ovs.vm.provision "ovs_networking", type: "shell", path: "scripts/ovs.sh", run: "always"
+
+    # setup eth2 for any other purpose
+    ovs.vm.network "private_network", ip: "192.168.70.101",
+                   virtualbox__intnet: "private_interface"
+
+    # Setup iscsi initator name - only needed on initial creation
+    ovs.vm.provision "isci", type: "shell", path: "scripts/iscsi-iname.sh"
+  end
+
+
+
+
+end
+

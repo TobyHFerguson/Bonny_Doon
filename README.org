@@ -108,3 +108,9 @@ vagrant package --base BD_OVS --output ovs-X.X.X-virtualbox.box
 #+END_SRC
 ** Finish up
 Once you've tested the box you've created you should delete the original =BD_OVS= VirtualBox VM
+* Using The Boxes
+The boxes are designed to be used together, but require some "run time" configuration to make that happen. 
+
+A subdirectory (=OVM_Project=) contains a =Vagrantfile= and a =scripts/= directory - these should be copied into your Vagrant directory. As configured the Vagrantfile will create an OVM manager and two OVM Servers, including configuring the iscsi initiator name (needed to distinguish one server from another in the iscsi world), and configuring the network on every restart to match OVM bond rules. 
+
+The network configuration is very trivial and might not be robust in the face of all the configuration that OVM Manager can do. 
