@@ -13,3 +13,4 @@ packer_cache/
 /.vagrant/
 /nohup.out
 /ovm.iso
+*.iso

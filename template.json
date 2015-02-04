@@ -14,9 +14,7 @@
 		"virtualbox-iso": {
 		    "scripts": [
 			".ovs/networks.sh"
-			, "./ovs/sudo.sh"
-			, "./ovs/vagrant.sh"
-			, "./ovs/cleanup.sh"
+			, ".ovs/cleanup.sh"
 		    ]
 		}
 	    }
@@ -36,7 +34,7 @@
 	{
 	    "type": "virtualbox-iso",
 	    "boot_command": [
-		"mboot.c32 xen.gz --- vmlinuz ksdevice=eth0 ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg  --- initrd.img <enter><wait>"
+		"mboot.c32 xen.gz --- vmlinuz ksdevice=eth0 ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-{{user `minor_version`}}.cfg  --- initrd.img <enter><wait>"
 	    ],
 	    "boot_wait": "10s",
 	    "disk_size": 12228,
@@ -46,9 +44,10 @@
             "iso_checksum": "{{user `iso_checksum`}}",
 	    "iso_checksum_type": "{{user `iso_checksum_type`}}",
 	    "iso_url": "{{user `iso_url`}}",
-	    "ssh_username": "root",
+	    "ssh_username": "vagrant",
+	    "ssh_password": "vagrant",
 	    "ssh_port": 22,
-	    "ssh_wait_timeout": "20m",
+	    "ssh_wait_timeout": "40m",
 	    "shutdown_command": "echo '/sbin/halt -h -p' > /tmp/shutdown.sh; echo 'vagrant'|sudo -S sh '/tmp/shutdown.sh'",
 	    "guest_additions_mode" : "disable",
 	    "virtualbox_version_file": ".vbox_version",

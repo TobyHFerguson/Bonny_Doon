@@ -12,4 +12,4 @@ in
        ;;
 esac
 
-./cleanup.sh
+/vagrant/.ovm/cleanup.sh

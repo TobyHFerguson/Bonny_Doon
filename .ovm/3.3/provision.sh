@@ -35,3 +35,5 @@ fi
 # Install the console rpm (http://docs.oracle.com/cd/E50245_01/E50247/html/vmiug-manager-vncviewer-install.html)
 rpm -Uvh /mnt/ovmcore-console-1.0-36.el6.noarch.rpm
 
+# Clean up /etc/hosts to remove the hostname used during the build
+sed -i '/127.0.0.1/s/ovm.lab.net ovm //' /etc/hosts

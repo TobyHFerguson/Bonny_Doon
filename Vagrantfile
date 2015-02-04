@@ -11,9 +11,9 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: ".ovm/provision.sh"
   config.vm.provider "virtualbox" do |v|
     # Recommended memory:
-    # v.memory = 7680
-    # This works: 
-    v.memory=3584
+    v.memory = 8200
+    # This works for 3.3.1 - so far 3.2.1 has failed.: 
+#    v.memory=3584
   end
 
 end
