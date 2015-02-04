@@ -9,7 +9,6 @@ packer_cache/
 *~
 
 .gitignore
-.gitattributes
 /.vagrant/
 /nohup.out
 /ovm.iso
